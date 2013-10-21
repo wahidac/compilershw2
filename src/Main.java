@@ -2,16 +2,39 @@
 import syntaxtree.*;
 import visitor.*;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
 
 public class Main {
    public static void main(String [] args) {
       try {
-         Node root = new MiniJavaParser(System.in).Goal();
+    	 Node root;
+    	 if(args.length == 1) {
+    		FileInputStream stream = new FileInputStream(args[0]); 
+    		root = new MiniJavaParser(stream).Goal();
+    	 } else {
+            root = new MiniJavaParser(System.in).Goal();
+    	 }
          System.out.println("Program parsed successfully");
-         root.accept(new GJNoArguDepthFirst());
+         //PrintSubtreeVisitor visitor = new PrintSubtreeVisitor();
+         SymbolTableVisitor visitor = new SymbolTableVisitor();
+         
+         //String subtree = root.accept(visitor,new Integer(0));
+         //System.out.println(subtree);
+         
+         //Create the symbol table
+         root.accept(visitor);
+         //Typecheck
+         
+
+         System.out.println(visitor);
       }
       catch (ParseException e) {
          System.out.println(e.toString());
-      }
+      } catch (FileNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
    }
 }

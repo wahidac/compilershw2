@@ -12,7 +12,7 @@ package syntaxtree;
  * f3 -> "public"
  * f4 -> "static"
  * f5 -> "void"
- * f6 -> "main"
+ * f6 -> "main"x
  * f7 -> "("
  * f8 -> "String"
  * f9 -> "["
