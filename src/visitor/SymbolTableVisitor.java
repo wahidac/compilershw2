@@ -49,6 +49,37 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 	   }
 	   
 	   /**
+	    * f0 -> "class"
+	    * f1 -> Identifier()
+	    * f2 -> "extends"
+	    * f3 -> Identifier()
+	    * f4 -> "{"
+	    * f5 -> ( VarDeclaration() )*
+	    * f6 -> ( MethodDeclaration() )*
+	    * f7 -> "}"
+	    */
+	   public void visit(ClassExtendsDeclaration n) {
+		   String identifier = n.f1.f0.toString();
+		   currentClassBinding = new ClassBinding();
+		   currentMethodBinding = null;
+		   //Take note of parent class
+		   currentClassBinding.parentClass = identifierForIdentifierNode(n.f3);
+		   
+		   //Visit variable declarations
+		   n.f5.accept(this);
+		   //Visit method declarations
+		   n.f6.accept(this);
+		   
+		   //Add the mapping
+		   insertIntoMap(table,currentClassBinding, identifier);
+		   
+		   currentClassBinding = null;
+		   currentMethodBinding = null;
+	   }
+
+	   
+	   
+	   /**
 	    * Grammar production:
 	    * f0 -> "public"
 	    * f1 -> Type()
@@ -67,7 +98,7 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 	   public void visit(MethodDeclaration n) {
 		   String identifier = n.f2.f0.toString();
 		   currentMethodBinding = new MethodBinding();
-		   HashMap<String, MethodBinding> map = currentClassBinding.methods;
+		   HashMap<String, MethodBinding> map = currentClassBinding.getMethodBindings();
 		   insertIntoMap(map,currentMethodBinding,identifier);
 		     
 		   //Get return type
@@ -148,7 +179,7 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 		   //Add the mapping
 		   insertIntoMap(table,currentClassBinding, identifier);
 		   //Add the method mapping
-		   insertIntoMap(currentClassBinding.methods,currentMethodBinding,"main");
+		   insertIntoMap(currentClassBinding.getMethodBindings(),currentMethodBinding,"main");
 		   //Don't care about return type
 		   currentClassBinding = null;
 		   currentMethodBinding = null;
@@ -181,7 +212,7 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 				  }
 			  } else {
 				  //Var declaration for a field in the class
-				  map = currentClassBinding.fields;
+				  map = currentClassBinding.getFields();
 			  }
 			  
 			  VarType v= new VarType(type);
@@ -227,9 +258,6 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 				  System.err.println("Duplicate variable detected!");
 				  tableSuccessfullyCreated = false;
 			  } else {
-				  //NOTE: if identifier is a class, need to make sure that class was declared somewhere.
-				  //Can store this in some secondary data structure, and after first pass, we can go
-				  //and check to see that all these declared identifiers have a corresponding class binding
 				  map.put(identifier, t);
 			  }
 			  

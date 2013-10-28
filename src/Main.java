@@ -26,7 +26,12 @@ public class Main {
          //Create the symbol table
          root.accept(symVisitor);
          //Typecheck
-         System.out.println(symVisitor.tableSuccessfullyCreated);
+         System.out.println("Table successfully created?:" + symVisitor.tableSuccessfullyCreated);
+         ValidateSymbolTableVisitor validateSymbolTable = new ValidateSymbolTableVisitor(symVisitor.table);
+         root.accept(validateSymbolTable);
+         System.out.println("Table successfully validated?:" + validateSymbolTable.programIsValid);
+
+         
          TypeChecker typeCheckVisitor = new TypeChecker(symVisitor.table);
          Boolean didTypecheck = root.accept(typeCheckVisitor);
          System.out.println("Did typecheck:" + didTypecheck.toString());

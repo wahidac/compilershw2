@@ -12,17 +12,11 @@ import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 import syntaxtree.*;
 
 //Visitor to return the type and expression would return.
-//Return null if an expression will not type check. Return
-//an array of types because an identifier may potentially
-//have different types, and based on what kind of expression
-//the types is being used in, we'll have to infer which
-//binding to use
+//Return null if an expression will not type check. 
 public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassBinding>>  {
 	public String currentClass;
 	public ClassBinding currentClassBinding;
 	public MethodBinding currentMethodBinding;	
-
-	//public returnDesiredVarType(VariableType.)
 	
 	/**
 	    * f0 -> AndExpression()
@@ -180,7 +174,7 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 		   	  assert(c != null);
 		   	  
 		   	  String method = SymbolTableVisitor.identifierForIdentifierNode(n.f2);
-		   	  MethodBinding m = c.methods.get(method);
+		   	  MethodBinding m = c.getMethodBinding(method, symbolTable);
 		   	  if(m == null) {
 		   		  //No method!!!
 		   		  return null;
@@ -193,6 +187,8 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 		   	  if(n.f4.present()) {
 		   		  if(!validateExpressionListInput(m,n.f4.node,symbolTable))
 		   			  return null;
+		   	  } else if(m.parameters.size() > 0) {
+		   		  return null;
 		   	  }
 		   	  
 		   	  return returnType;
@@ -215,7 +211,7 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 			   VarType p = v.getValue();
 			   //Make sure expression type checks to the right type
 			   VarType exprTypr = currentExpression.accept(this, symbolTable);
-			   if(!VarType.canAssignVarType(p, exprTypr)) {
+			   if(!VarType.canAssignVarType(p, exprTypr,symbolTable)) {
 				   legitInput = false;
 				   break;
 			   }
@@ -276,6 +272,7 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	   /**
 	    * f0 -> <IDENTIFIER>
 	    */
+	   //Return type of a variable.
 	   public VarType visit(Identifier n, HashMap<String, ClassBinding> symbolTable) {
 		   //Need to consult symbol table for type. 
 		   VarType v = null;
@@ -288,7 +285,7 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 			   v = currentMethodBinding.parameters.get(id);		
 		   }
 		   if(v == null) {
-			   v = currentClassBinding.fields.get(id);
+			   v = currentClassBinding.getField(id, symbolTable);
 		   }
 		   
 		   return v;
@@ -330,17 +327,18 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	    * f3 -> ")"
 	    */
 	   
-	   //NOTE: need to directly examine the identifier here, it will be a class name
-	 /*  public VarType visit(AllocationExpression n, HashMap<String, ClassBinding> symbolTable) {
-		   //this refers to whatever class the current class binding refers to.
-		   VarType v = n.f1.accept(this,symbolTable);
-		   if(v == null)
+	   public VarType visit(AllocationExpression n, HashMap<String, ClassBinding> symbolTable) {
+		   String id = SymbolTableVisitor.identifierForIdentifierNode(n.f1);
+		   ClassBinding c = symbolTable.get(id);
+		   if(c == null)
 			   return null;
-		   if(v.type == VariableType.CLASS)
+		   else
+		   {
+			   VarType v = new VarType(VariableType.CLASS,id);
 			   return v;
-		   else 
-			   return null;
-	   }*/
+		   }
+		  
+	   }
 	   
 	   /**
 	    * f0 -> "!"

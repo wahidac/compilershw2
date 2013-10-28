@@ -124,7 +124,7 @@ public class TypeChecker extends GJNoArguDepthFirst<Boolean> {
 		  String id = SymbolTableVisitor.identifierForIdentifierNode(n.f1);
 		  //Set scopes 
 		  setCurrentClassBinding(symbolTable.get(id));
-		  setCurrentMetodBinding(currentClassBinding.methods.get("main"));
+		  setCurrentMetodBinding(currentClassBinding.getMethodBindings().get("main"));
 		  setCurrentClass(id);
 		  Boolean _ret = n.f15.accept(this);
 		  
@@ -189,18 +189,65 @@ public class TypeChecker extends GJNoArguDepthFirst<Boolean> {
 	   public Boolean visit(MethodDeclaration n) {
 	      Boolean _ret=false;
 		  String id = SymbolTableVisitor.identifierForIdentifierNode(n.f2);
-		  setCurrentMetodBinding(currentClassBinding.methods.get(id));
+		  setCurrentMetodBinding(currentClassBinding.getMethodBindings().get(id));
 		  _ret = n.f8.accept(this);
 		  //Need to make sure return type is what it should be
 		  VarType v = n.f10.accept(typeCalculator,symbolTable);
 		  VarType expectedReturnType = currentMethodBinding.returnValue;
 		  
-		  if(!VarType.canAssignVarType(expectedReturnType, v))
+		  if(!VarType.canAssignVarType(expectedReturnType, v, symbolTable))
 			  _ret = false;
 		  setCurrentMetodBinding(null);
 		
 	      return _ret;
 	   }
+	   
+	   
+	   /**
+	    * f0 -> "class"
+	    * f1 -> Identifier()
+	    * f2 -> "extends"
+	    * f3 -> Identifier()
+	    * f4 -> "{"
+	    * f5 -> ( VarDeclaration() )*
+	    * f6 -> ( MethodDeclaration() )*
+	    * f7 -> "}"
+	    */
+	   public Boolean visit(ClassExtendsDeclaration n) {
+		   	  Boolean _ret=true;
+			  String id = SymbolTableVisitor.identifierForIdentifierNode(n.f1);
+			  
+			  //Set scopes 
+			  setCurrentClassBinding(symbolTable.get(id));
+			  setCurrentMetodBinding(null);
+			  setCurrentClass(id);
+			  
+			  assert(!currentClassBinding.parentClass.isEmpty());
+			  
+		      _ret = n.f6.accept(this);
+		      
+		      //Reset scopes
+			  setCurrentClassBinding(null);
+			  setCurrentMetodBinding(null);
+			  setCurrentClass(null);
+			  
+		      return _ret;
+	   }
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
+	   
 	   
 	   /**
 	    * f0 -> Block()
@@ -238,7 +285,7 @@ public class TypeChecker extends GJNoArguDepthFirst<Boolean> {
 		  if(v1 == null || v2 == null)
 			  return false;
 		  
-	      return VarType.canAssignVarType(v1, v2);
+	      return VarType.canAssignVarType(v1, v2, symbolTable);
 	   }
 	   
 	   /**

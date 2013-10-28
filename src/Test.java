@@ -16,10 +16,36 @@ class Test{
 }
 
 class Froyo {
+	int a;
 	public int hasbro() {
 		return 2;
 	}
 	public int moko(int a) {
+		return a;
+	}
+	
+}
+
+
+class NoNo extends Froyo {
+	boolean a;
+	
+	public int randomFunc() {
+		int b;
+		return b;
+	}
+	
+	public int moko(int a) {
+		int b;
+		return 2;
+	}
+}
+
+class Fubu extends NoNo {
+	
+	public int yoko() {
+		int a;
+		a = this.moko(2);
 		return a;
 	}
 }
@@ -39,6 +65,8 @@ class Yolo{
     	a = f.hasbro();
     	return a;
     }
+    
+ 
 
     // Invoke the Initialization, Sort and Printing
     // Methods
@@ -66,7 +94,7 @@ class Yolo{
 	int t ;
 	Froyo myFroyo;
 
-	
+	myFroyo  = new Froyo();
 	i = size - 1 ;
 	aux02 = 0 - 1 ;
 	aux02 = this.Start(2, myFroyo.moko(3), j, false);
@@ -95,7 +123,11 @@ class Yolo{
     // Printing method
     public int Print(){
 	int j ;
+	Yolo k;
+	
 	j = 0 ;
+	
+	k = new Yolo();
 	while (j < (size)) {
 	    System.out.println(number[j]);
 	    j = j + 1 ;
