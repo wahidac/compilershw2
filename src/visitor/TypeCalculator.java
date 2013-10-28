@@ -2,6 +2,12 @@ package visitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 
 import syntaxtree.*;
 
@@ -12,6 +18,7 @@ import syntaxtree.*;
 //the types is being used in, we'll have to infer which
 //binding to use
 public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassBinding>>  {
+	public String currentClass;
 	public ClassBinding currentClassBinding;
 	public MethodBinding currentMethodBinding;	
 
@@ -28,7 +35,7 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	    *       | MessageSend()
 	    *       | PrimaryExpression()
 	    */
-	   public VarType[] visit(Expression n, HashMap<String, ClassBinding> symbolTable) {
+	   public VarType visit(Expression n, HashMap<String, ClassBinding> symbolTable) {
 	      return n.f0.accept(this, symbolTable);
 	    
 	   }
@@ -41,6 +48,8 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	   public VarType visit(AndExpression n, HashMap<String, ClassBinding> symbolTable) {
 		   	  VarType b1 = n.f0.accept(this, symbolTable);
 		   	  VarType b2 = n.f2.accept(this, symbolTable);
+		   	  if(b1 == null || b2 == null)
+		   		  return null;
 		   	  if(b1.type == VariableType.BOOLEAN && b2.type == VariableType.BOOLEAN)
 		   		  return new VarType(VariableType.BOOLEAN);
 		   	  else
@@ -56,6 +65,8 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	   public VarType visit(CompareExpression n, HashMap<String, ClassBinding> symbolTable) {
 		   	  VarType b1 = n.f0.accept(this, symbolTable);
 		   	  VarType b2 = n.f2.accept(this, symbolTable);
+		   	  if(b1 == null || b2 == null)
+		   		  return null;
 		   	  if(b1.type == VariableType.INTEGER && b2.type == VariableType.INTEGER)
 		   		  return new VarType(VariableType.BOOLEAN);
 		   	  else
@@ -71,6 +82,8 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	   public VarType visit(PlusExpression n, HashMap<String, ClassBinding> symbolTable) {
 		   	  VarType b1 = n.f0.accept(this, symbolTable);
 		   	  VarType b2 = n.f2.accept(this, symbolTable);
+		   	  if(b1 == null || b2 == null)
+		   		  return null;
 		   	  if(b1.type == VariableType.INTEGER && b2.type == VariableType.INTEGER)
 		   		  return new VarType(VariableType.INTEGER);
 		   	  else
@@ -86,6 +99,8 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	   public VarType visit(MinusExpression n, HashMap<String, ClassBinding> symbolTable) {
 		   	  VarType b1 = n.f0.accept(this, symbolTable);
 		   	  VarType b2 = n.f2.accept(this, symbolTable);
+		   	  if(b1 == null || b2 == null)
+		   		  return null;
 		   	  if(b1.type == VariableType.INTEGER && b2.type == VariableType.INTEGER)
 		   		  return new VarType(VariableType.INTEGER);
 		   	  else
@@ -100,6 +115,8 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	   public VarType visit(TimesExpression n, HashMap<String, ClassBinding> symbolTable) {
 		   	  VarType b1 = n.f0.accept(this, symbolTable);
 		   	  VarType b2 = n.f2.accept(this, symbolTable);
+		   	  if(b1 == null || b2 == null)
+		   		  return null;
 		   	  if(b1.type == VariableType.INTEGER && b2.type == VariableType.INTEGER)
 		   		  return new VarType(VariableType.INTEGER);
 		   	  else
@@ -115,12 +132,31 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 	   public VarType visit(ArrayLookup n, HashMap<String, ClassBinding> symbolTable) {
 		   	  VarType b1 = n.f0.accept(this, symbolTable);
 		   	  VarType b2 = n.f2.accept(this, symbolTable);
+		   	  if(b1 == null || b2 == null)
+		   		  return null;
 		   	  if(b1.type == VariableType.INT_ARRAY && b2.type == VariableType.INTEGER)
 		   		  return new VarType(VariableType.INTEGER);
 		   	  else
 		   		  return null;
 		}
 	   
+	   /**
+	    * f0 -> PrimaryExpression()
+	    * f1 -> "."
+	    * f2 -> "length"
+	    */
+	   
+	   public VarType visit(ArrayLength n, HashMap<String, ClassBinding> symbolTable) {
+		   	  VarType b1 = n.f0.accept(this, symbolTable);
+		   	  if(b1 == null)
+		   		  return null;
+		   	  if(b1.type == VariableType.INT_ARRAY)
+		   		  return new VarType(VariableType.INTEGER);
+		   	  else
+		   		  return null;
+		}
+	   
+	
 	   /**
 	    * f0 -> PrimaryExpression()
 	    * f1 -> "."
@@ -133,7 +169,7 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 		   	 //f0 must be a class.
 		   	  VarType object = n.f0.accept(this,symbolTable);
 		   	  
-		   	  if(object.type != VariableType.CLASS)
+		   	  if(object == null || object.type != VariableType.CLASS)
 		   		  return null;
 		   	  
 		   	  //f2 must be a method in the class given by f0, verify this
@@ -152,13 +188,50 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 		   	  
 		   	  VarType returnType = m.returnValue;
 		   	  
-		   	  //Visit expression list to make sure everything there type checks w/ what is expected as input
-		   	  //to the method
-		   	  n.f4.accept(this,symbolTable);   	  
+		   	  //Make sure everything in the expression list type checks w/ what is expected as input
+		   	  //to the method m
+		   	  if(n.f4.present()) {
+		   		  if(!validateExpressionListInput(m,n.f4.node,symbolTable))
+		   			  return null;
+		   	  }
+		   	  
 		   	  return returnType;
 		}
 	   
-	   
+       public boolean validateExpressionListInput(MethodBinding m, Node node, HashMap<String, ClassBinding> symbolTable) {
+    	   assert(node instanceof ExpressionList);
+    	   ExpressionList n = (ExpressionList) node;
+		   Expression currentExpression = n.f0;
+		   boolean legitInput = true;
+		   NodeListOptional nodeList = n.f1;
+		   Vector<Node> expressions = nodeList.nodes;
+		   Iterator<Node> itr = expressions.iterator();
+		   LinkedHashMap<String, VarType> params = m.parameters;
+		   
+		   if(params.size() != expressions.size() + 1)
+			   return false;
+		   
+		   for(Map.Entry<String, VarType> v:params.entrySet()) {
+			   VarType p = v.getValue();
+			   //Make sure expression type checks to the right type
+			   VarType exprTypr = currentExpression.accept(this, symbolTable);
+			   if(!VarType.canAssignVarType(p, exprTypr)) {
+				   legitInput = false;
+				   break;
+			   }
+			   
+			   //Get next expression
+			   if(itr.hasNext()) {
+				   ExpressionRest r = (ExpressionRest)itr.next();
+			   	   currentExpression = r.f1;
+			   }
+		
+		   }
+		   
+		   return legitInput;
+		    
+	   }
+	  
 	    
 	   
 	   
@@ -199,10 +272,7 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 		   return new VarType(VariableType.BOOLEAN);
 	   }
 	   
-	   
-	   public VarType returnDesiredTypeFromArrayOfTypes(VarType[] types)
-	   
-	   
+	  	   
 	   /**
 	    * f0 -> <IDENTIFIER>
 	    */
@@ -211,25 +281,90 @@ public class TypeCalculator extends GJDepthFirst<VarType, HashMap<String, ClassB
 		   VarType v = null;
 		   //Check local variable declarations, which take priority over class declarations.
 		   //If we find the mapping in the method dec, don't look at the class fields.
-		   v = currentMethodBinding.locals.get(n);
+		   //Use to visit variable names declared in the var declaration portions
+		   String id = SymbolTableVisitor.identifierForIdentifierNode(n);
+		   v = currentMethodBinding.locals.get(id);
 		   if(v == null) {
-			   v = currentMethodBinding.parameters.get(n);		
+			   v = currentMethodBinding.parameters.get(id);		
 		   }
 		   if(v == null) {
-			   v = currentClassBinding.fields.get(n);
+			   v = currentClassBinding.fields.get(id);
 		   }
 		   
 		   return v;
 	   }
 	   
+	   
 	   /**
 	    * f0 -> "this"
 	    */
-	   public R visit(ThisExpression n, A argu) {
-	      R _ret=null;
-	      n.f0.accept(this, argu);
-	      return _ret;
+	   public VarType visit(ThisExpression n, HashMap<String, ClassBinding> symbolTable) {
+		   //this refers to whatever class the current class binding refers to.
+		   assert(currentClass != null && !currentClass.isEmpty());
+		   VarType v = new VarType(VariableType.CLASS,currentClass);
+		   return v;
 	   }
-	
+	   
+	   /**
+	    * f0 -> "new"
+	    * f1 -> "int"
+	    * f2 -> "["
+	    * f3 -> Expression()
+	    * f4 -> "]"
+	    */
+	   public VarType visit(ArrayAllocationExpression n, HashMap<String, ClassBinding> symbolTable) {
+		   //this refers to whatever class the current class binding refers to.
+		   VarType v = n.f3.accept(this,symbolTable);
+		   if(v == null)
+		   	   return null;
+		   if(v.type == VariableType.INTEGER)
+			   return new VarType(VariableType.INT_ARRAY);
+		   else 
+			   return null;
+	   }
+	   
+	   /**
+	    * f0 -> "new"
+	    * f1 -> Identifier()
+	    * f2 -> "("
+	    * f3 -> ")"
+	    */
+	   
+	   //NOTE: need to directly examine the identifier here, it will be a class name
+	 /*  public VarType visit(AllocationExpression n, HashMap<String, ClassBinding> symbolTable) {
+		   //this refers to whatever class the current class binding refers to.
+		   VarType v = n.f1.accept(this,symbolTable);
+		   if(v == null)
+			   return null;
+		   if(v.type == VariableType.CLASS)
+			   return v;
+		   else 
+			   return null;
+	   }*/
+	   
+	   /**
+	    * f0 -> "!"
+	    * f1 -> Expression()
+	    */
+	   public VarType visit(NotExpression n, HashMap<String, ClassBinding> symbolTable) {
+		   //this refers to whatever class the current class binding refers to.
+		   VarType v = n.f1.accept(this,symbolTable);
+		   if(v == null)
+			   return null;
+		   if(v.type == VariableType.BOOLEAN)
+			   return v;
+		   else 
+			   return null;
+	   }
+	   
+	   /**
+	    * f0 -> "("
+	    * f1 -> Expression()
+	    * f2 -> ")"
+	    */
+	   public VarType visit(BracketExpression n, HashMap<String, ClassBinding> symbolTable) {
+		   //this refers to whatever class the current class binding refers to.
+		   return n.f1.accept(this,symbolTable);
+	   }
 	
 }

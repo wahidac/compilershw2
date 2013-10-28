@@ -18,17 +18,18 @@ public class Main {
     	 }
          System.out.println("Program parsed successfully");
          //PrintSubtreeVisitor visitor = new PrintSubtreeVisitor();
-         SymbolTableVisitor visitor = new SymbolTableVisitor();
+         SymbolTableVisitor symVisitor = new SymbolTableVisitor();
          
          //String subtree = root.accept(visitor,new Integer(0));
          //System.out.println(subtree);
          
          //Create the symbol table
-         root.accept(visitor);
+         root.accept(symVisitor);
          //Typecheck
-         
-
-         System.out.println(visitor);
+         System.out.println(symVisitor.tableSuccessfullyCreated);
+         TypeChecker typeCheckVisitor = new TypeChecker(symVisitor.table);
+         Boolean didTypecheck = root.accept(typeCheckVisitor);
+         System.out.println("Did typecheck:" + didTypecheck.toString());
       }
       catch (ParseException e) {
          System.out.println(e.toString());

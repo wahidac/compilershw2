@@ -13,7 +13,7 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 	   public HashMap<String, ClassBinding> table;
 	   public ClassBinding currentClassBinding;
 	   public MethodBinding currentMethodBinding;
-	   boolean tableSuccessfullyCreated;
+	   public boolean tableSuccessfullyCreated;
 	   
 	   public SymbolTableVisitor() {
 		   table = new HashMap<String,ClassBinding>();
@@ -147,6 +147,9 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 		   
 		   //Add the mapping
 		   insertIntoMap(table,currentClassBinding, identifier);
+		   //Add the method mapping
+		   insertIntoMap(currentClassBinding.methods,currentMethodBinding,"main");
+		   //Don't care about return type
 		   currentClassBinding = null;
 		   currentMethodBinding = null;
 	   }
@@ -169,7 +172,7 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 				  //Var declaration for method in current class
 				  map = currentMethodBinding.locals;
 				  //Make sure hasn't been declared in the parameter list
-				  for(Map.Entry<String, VarType> v:map.entrySet()) {
+				  for(Map.Entry<String, VarType> v:currentMethodBinding.parameters.entrySet()) {
 					  if(identifier.equals(v.getKey())) {
 						  System.err.println("Duplicate local var name as a method parameter!");
 						  tableSuccessfullyCreated = false;
@@ -187,7 +190,7 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 				   v.className = identifierForIdentifierNode((Identifier)n.f0.f0.choice);
 		   	  }
 			  
-			  insertIntoMap(map,new VarType(type),identifier);
+			  insertIntoMap(map,v,identifier);
 	   }
 	   
 	   
@@ -233,7 +236,7 @@ public class SymbolTableVisitor extends DepthFirstVisitor {
 			 
 	   }
 	   
-	   public void insertIntoMap(HashMap<String,MethodBinding> map, MethodBinding b, String identifier, int ) {
+	   public void insertIntoMap(HashMap<String,MethodBinding> map, MethodBinding b, String identifier) {
 		   //Check to make sure var isn't already declared
 			  if(map.get(identifier) != null) {
 				  //Already a declaration!

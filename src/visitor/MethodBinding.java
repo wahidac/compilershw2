@@ -1,15 +1,16 @@
 package visitor;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 
 public class MethodBinding  {
 	public VarType returnValue;
-	public HashMap<String, VarType> parameters;
+	public LinkedHashMap<String, VarType> parameters;
 	public HashMap<String, VarType> locals;
 	
 	public MethodBinding() {
-		parameters = new HashMap<String,VarType>();
+		parameters = new LinkedHashMap<String,VarType>();
 		locals = new HashMap<String,VarType>();
 	}
 }
