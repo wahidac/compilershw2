@@ -35,18 +35,37 @@ class NoNo extends Froyo {
 		return b;
 	}
 	
-	public int moko(int a) {
-		int b;
-		return 2;
-	}
 }
 
 class Fubu extends NoNo {
-	
+	int a;
 	public int yoko() {
 		int a;
 		a = this.moko(2);
 		return a;
+	}
+	
+	
+	public Toopie mko(Froyo foopie, int a) {
+		int b;
+		int t;
+		NoNo s;
+		
+		return s;
+	}
+}
+
+class Toopie extends NoNo {
+	Fubu f;
+	
+	public int yoo() {
+		Froyo g;
+		int t;
+		int[] a;
+		t = a[t];
+		g = new Toopie();
+		//g = f.mko(f.mko(f.mko(g,2),4),this.yoo());
+		return 3;
 	}
 }
 

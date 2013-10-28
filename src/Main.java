@@ -12,6 +12,10 @@ public class Main {
     	 Node root;
     	 if(args.length == 1) {
     		FileInputStream stream = new FileInputStream(args[0]); 
+    		
+    		
+    		
+    		
     		root = new MiniJavaParser(stream).Goal();
     	 } else {
             root = new MiniJavaParser(System.in).Goal();
